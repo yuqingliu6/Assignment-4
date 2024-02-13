@@ -1,7 +1,7 @@
 ---
 title: "Assignment-4"
 date: "2024-02-13"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +20,7 @@ library(caret)
 
 ### Part I: Implementing a Simple Prediction Pipeline
 
-1. Perform basic data cleaning. Note which features are continuous, which are categorical and ensure they are being stored that way in your R dataset (That is, if categorical variables have been read-in as continuous variables, convert them to factors)
+1. Perform basic data cleaning. 
 
 ```{r cleaning}
 # path where datasets are stored as working directory
@@ -66,10 +66,14 @@ data <- data |> distinct(id, .keep_all = TRUE)
 data$id <- NULL
 ```
 
+<br>
 
 2. Partition data into training and testing (use a 70/30 split)
 
 ```{r partition data}
+# set seed
+set.seed(123)
+
 # split data into training and testing
 train.index = createDataPartition(data$healthy_days, p = 0.7, list = FALSE)
 
@@ -77,9 +81,13 @@ train = data[train.index, ]
 test = data[-train.index, ]
 ```
 
-3. Fit two prediction  models using  different subsets of the features in the training data. Features can overlap in the two models, but the feature sets should not be exactly the same across models. Clearly state which features were used in the two models.
+<br>
 
-I will use two linar regression models to do the machine learning task. The dependent variable in both models is the number of healthy days. Model 1 contains two independent variables which are whether or not have hypertension and number of physical active days. Model 2 contains all the features available in the dataset.
+3. Fit two prediction  models using  different subsets of the features in the training data. 
+
+**Discussion:** 
+
+I will use two linear regression models to do the machine learning task. The dependent variable in both models is the number of healthy days. Model 1 contains two independent variables which are whether or not have hypertension and number of physical active days (during the last 7 days, on how many days did you walk to get to and from places). Model 2 contains all the features available in the dataset.
 
 * Model 1 : healthy_days ~ hypertension + physical_activity_days
 * Model 2 : healthy_days ~ hypertension + diabetes + asthma + tobacco + 
@@ -97,6 +105,7 @@ model2 = train(healthy_days ~ hypertension + diabetes + asthma + tobacco +
                        hispanic + born_in_us + poverty_group, data = train, method = "lm", trControl = control)
 ```
 
+<br>
 
 4. Apply both models within the test data and determine which model is the preferred prediction model using the appropriate evaluation metric(s). 
 
@@ -122,11 +131,15 @@ result |>
   ggplot(aes(x = model, y = residual)) + geom_violin()
 ```
 
-The mean squared error (MSE) for Model 1 (0.070) is slightly higher than that of Model 2 (0.065). Additionally, the residual plot indicates that both models have residuals centered around zero, which is a desirable outcome. Moreover, the spread of the residuals, as depicted by the range from top to bottom of the violin plot, appears similar for both models, suggesting comparable variance in their predictions. However, upon closer examination, Model 2 exhibits a slightly tighter distribution of residuals, implying more consistent predictions. Therefore, based on the MSE evaluation, Model 2 is considered the preferred prediction model.
+**Discussion:** The mean squared error (MSE) for Model 1 (0.085) is slightly higher than that of Model 2 (0.078). Additionally, the residual plot indicates that both models have residuals centered around zero, which is a desirable outcome. Moreover, the spread of the residuals, as depicted by the range from top to bottom of the violin plot, appears similar for both models, suggesting comparable variance in their predictions. However, upon closer examination, Model 2 exhibits a slightly tighter distribution of residuals, implying more consistent predictions. Therefore, based on the MSE evaluation, Model 2 is considered the preferred prediction model.
 
-5. Describe one setting (in 1-2 sentences) where the implementation of your final model would be useful.
+<br>
 
-The Model 2 is capable of predicting the number of days an individual reports having good physical health in a month. This prediction is derived from a comprehensive evaluation of medical conditions, lifestyle habits, and socioeconomic factors. The insights gleaned from this model can inform targeted health interventions and resource allocation strategies aimed at enhancing the overall well-being of the population in NYC.
+5. Describe one setting where the implementation of your final model would be useful.
+
+**Discussion:** The Model 2 is capable of predicting the number of days an individual reports having good physical health in a month. This prediction is derived from a comprehensive evaluation of medical conditions, lifestyle habits, and sociodemographic factors. The insights gleaned from this model can inform targeted health interventions and resource allocation strategies aimed at enhancing the overall well-being of the population in New York City.
+
+<br>
 
 ### Part II: Conducting an Unsupervised Analysis
 
@@ -165,7 +178,7 @@ USArrests$scale
 # The sds used to scale to the sds above are close.
 
 # conduct clustering analysis using hierarchical clustering by creating dissimilarity matrix first
-diss.matrix <- dist(USArrests, method = "euclidean")
+diss.matrix <- dist(transformed.vals, method = "euclidean")
 
 # hierarchical clustering using complete linkage
 clusters.hcut <- hclust(diss.matrix, method = "complete")
@@ -174,6 +187,7 @@ clusters.hcut <- hclust(diss.matrix, method = "complete")
 plot(clusters.hcut, cex = 0.6, hang = -1)
 ```
 
+<br>
 
 7. Determine the optimal number of clusters using a clear, data-driven strategy.
 
@@ -192,15 +206,19 @@ table(clusters.h.4)
 clusters.hcut=hcut(transformed.vals, k=4, hc_func="hclust", hc_method="complete", hc_metric="euclidian")
 ```
 
+<br>
+
 8. Describe the composition of each cluster in terms of the original input features
 
-* Cluster 1: This cluster is characterized by above-average values in all categories except UrbanPop, which is close to the average (z-score of -0.832). It suggests states with higher crime rates but moderately smaller urban populations.
+**Discussion:**
 
-* Cluster 2: States in this cluster exhibit all features above the average, especially Assault and Rape rates. This cluster likely represents states with high crime rates and large urban populations.
+* Cluster 1: This cluster is characterized by above-average values in all categories except UrbanPop, which is close to the average. It suggests states with higher crime rates but moderately smaller urban populations.
 
-* Cluster 3: Negative z-scores for Murder, Assault, and Rape indicate that these areas have lower than average rates of these crimes. The UrbanPop is slightly above average, suggesting moderately sized urban populations but high crime rates in these areas.
+* Cluster 2: States in this cluster exhibit all features above the average, especially assault and rape rates. This cluster likely represents states with high crime rates and large urban populations.
 
-* Cluster 4: This cluster is characterized by below-average values for all features (Murder, Assault, UrbanPop, Rape), as indicated by the negative z-scores. States falling into this cluster tend to have lower than average crime rates and urban population sizes.
+* Cluster 3: Negative z-scores for murder, assault, and rape rate indicate that these areas have lower than average rates of these three types of crimes. The UrbanPop is slightly above average, suggesting moderately sized urban populations but low crime rates in these areas.
+
+* Cluster 4: This cluster is characterized by below-average values for all features (Murder, Assault, UrbanPop, Rape), as indicated by the negative z-scores. States falling into this cluster tend to have lower than average crime rates and small urban population sizes.
 
 ```{r}
 # show the mean value of features within each cluster
@@ -210,28 +228,79 @@ input.feature.vals=cbind(transformed.vals,cluster=clusters.hcut$cluster)
 # summarize the mean value of features within each cluster
 input.feature.vals |> group_by(cluster) |> 
   summarise_all(mean)
+
+# check size of the clusters
+clusters.hcut$size
+
+# check cluster dendrogram
+fviz_dend(clusters.hcut)
+
+# check cluster plot
+fviz_cluster(clusters.hcut)
 ```
 
+<br>
 
-9. Pretend that the data are from 2022 and not 1973. Describe one research question that can be addressed using the newly identified clusters. Briefly comment on any scientific or ethical considerations one should review before using these clusters for your specific question. NOTE: The clusters can be used as an exposure, an outcome or a covariate. (2-4 sentences)
+9. Pretend that the data are from 2022 and not 1973. Describe one research question that can be addressed using the newly identified clusters. Briefly comment on any scientific or ethical considerations one should review before using these clusters for your specific question. 
 
-* We can investigate what is relationship between the outcome urban population size and indicators for crime such as murder, assault, and rape rate. If the data are from 2022, there might be more features available such as sociodemographic data as well. So, in terms of scientific considerations, we need to consider which feature we should select and how many clusters there need to have. In terms of ethical considerations, we should check whether the data is representative for all sociodemographic group in the society to avoid a biased dataset where certain groups are neglected. 
+**Discussion:**
+
+* We can investigate if the relationship between the outcome urban population size and indicators for crime such as murder, assault, and rape rate varies by clusters. If the data are from 2022, there might be more features available such as sociodemographic data as well. So, in terms of scientific considerations, we need to consider which feature we should select and how many clusters there need to have. In terms of ethical considerations, we should check whether the data is representative for all sociodemographic groups in the society to avoid a biased dataset where certain groups are neglected. 
+
+<br>
 
 10. Optional Repeat analysis with a different linkage method (e.g. single or average). Do the clusters change?
 
 ```{r}
 # change the linkage method to single 
-clusters.hcut <-hcut(USArrests, k = 4, hc_func = "hclust", hc_method = "single", hc_metric = "euclidian")
+clusters.hcut.4 <-hcut(USArrests, k = 4, hc_func = "hclust", hc_method = "single", hc_metric = "euclidian")
 
-clusters.hcut$size
-fviz_dend(clusters.hcut)
-fviz_cluster(clusters.hcut)
+# check size of the clusters
+clusters.hcut.4$size
+
+# check cluster dendrogram
+fviz_dend(clusters.hcut.4)
+
+# check cluster plot
+fviz_cluster(clusters.hcut.4)
 
 # bind the cluster value to original data
-input.feature.vals <-cbind(USArrests,cluster = clusters.hcut$cluster)
+input.feature.vals <-cbind(transformed.vals,cluster = clusters.hcut.4$cluster)
 
 # summarize the mean value of features within each cluster
 input.feature.vals |> group_by(cluster) |> 
   summarise_all(mean)
+
+# Since 4 clusters may not delineate distinct patterns, we want to search for the best number of clusters.
+gap_stat <- clusGap(transformed.vals, FUN = hcut, hc_method="single", K.max = 10, B = 50)
+fviz_gap_stat(gap_stat)
+
+# 9 has the highest Gap Statistics
+
+# repeat the previous code for 9 clusters
+clusters.hcut.9 <-hcut(USArrests, k = 9, hc_func = "hclust", hc_method = "single", hc_metric = "euclidian")
+
+# check size of the clusters
+clusters.hcut.9$size
+
+# check cluster dendrogram
+fviz_dend(clusters.hcut.9)
+
+# check cluster plot
+fviz_cluster(clusters.hcut.9)
+
+# bind the cluster value to original data
+input.feature.vals <-cbind(transformed.vals,cluster = clusters.hcut.9$cluster)
+
+# summarize the mean value of features within each cluster
+input.feature.vals |> group_by(cluster) |> 
+  summarise_all(mean)
+
 ```
-Complete method is better. 
+**Discussion:**
+
+The clusters change after using a different linkage method, specifically the single linkage method. With the complete linkage method, specifying a desire for 4 clusters results in clusters of relatively similar size, comprising 8, 11, 21, and 10 states, respectively. Conversely, when employing the single linkage method, one cluster emerges significantly larger, encompassing 47 states, while the remaining three clusters contain only one state each. Moreover, the cluster dendrograms exhibit disparity, illustrating that while the complete linkage method yields clusters of comparable size, the single linkage method tends to aggregate most states into a single cluster, as we can see in lower branches. The single linkage method produces a sizable cluster characterized by moderate values across all four features, namely murder rate, assault rate, rape rate, and urban population size. However, compared to the complete linkage method, the single linkage method does not effectively delineate distinct clusters when aiming to create 4 clusters. After adjusting the number of clusters to 9, which is deemed optimal according to the single linkage method, we observed considerable disparities in the sizes of the resulting clusters (7, 1, 4, 14, 10, 1, 10, 2, 1). Furthermore, the cluster plot revealed overlaps in the areas associated with each cluster. Consequently, our analysis suggests that, overall, the complete linkage method may perform better than the single linkage method in this scenario.
+
+
+
+<br>
